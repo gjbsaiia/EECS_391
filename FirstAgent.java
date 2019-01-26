@@ -19,6 +19,11 @@ import edu.cwru.sepia.environment.model.*;
 import edu.cwru.sepia.util.Direction;
 
 
+/*
+ *  Stuart resource agent
+ * 
+ */
+
 public class FirstAgent extends Agent {
 
 	public FirstAgent(int arg0) {

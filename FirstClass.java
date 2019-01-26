@@ -16,6 +16,12 @@ import edu.cwru.sepia.util.Direction;
 import edu.cwru.sepia.environment.*;
 import edu.cwru.sepia.util.*;
 import java.util.*;
+
+/*
+ * Eric's experiment
+ * 
+ */
+
 public class FirstClass extends Agent {
 
 	public FirstClass(int playernum) {
