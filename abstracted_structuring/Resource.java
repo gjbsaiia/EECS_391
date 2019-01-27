@@ -12,8 +12,10 @@ public class Resource implements Comparable<Resource>{
 	private final int x;
 	private final int y;
 	public double dist;
-	private boolean active;
+	
 	private int amount;
+	
+	private int numWork;
 	
 	public Resource(int resourceID, int xDimen, int yDimen, int totalAmount){
 		this.id = resourceID;
@@ -21,24 +23,34 @@ public class Resource implements Comparable<Resource>{
 		this.y = yDimen;
 		this.dist = -1;
 		this.amount = totalAmount;
-		if(this.amount > 0){
-			this.active = true;
-		}
+	}
+	
+	public void incWork(){
+		this.numWork ++;
+	}
+	
+	public void decWork(){
+		this.numWork --;
+	}
+	
+	public boolean checkCap(){
+		return (numWork < 3);
 	}
 	
 	public int getX(){return this.x;}
 	
 	public int getY(){return this.y;}
 	
-	public boolean updateAmount(int current){
-		this.amount = current;
-		if(this.amount > 0) this.active = true;
-		else this.active = false;
-		return this.active;
+	public void updateAmount(int update){
+		this.amount = this.amount - update;
+	}
+	
+	public int getAmount(){
+		return this.amount;
 	}
 	
 	public boolean isActive(){
-		return this.active;
+		return (this.amount > 0);
 	}
 	
 	public void setDist(int hX, int hY){

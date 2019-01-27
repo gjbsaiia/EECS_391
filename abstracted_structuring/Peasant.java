@@ -2,10 +2,14 @@
 		// unitID for this peasant
 		public int id;
 		
-		// resource id : 0=idle, 1=gold, 2=wood, 3=task
+		// status: 0=idle, 1=gold, 2=wood, 3=depositing
 		private int status;
 		
-		private int resourceID;
+		// id of resource peasant is farming
+		private Resource res;
+		
+		// id of resource type: 1=gold, 2=wood
+		private int type;
 		
 		// decides how much resource should be collected before peasant deposits
 		private int capacity;
@@ -22,12 +26,22 @@
 		// how much this peasant has gathered in total
 		private int totalContribution;
 		
-		public Peasant(int unitID, int capacity){
+		public Peasant(int unitID, int cap){
 			this.id = unitID;
 			this.status = 0; //peasant starts idle
 			this.lifespan = 1;
 			this.totalContribution = 0;
-			this.resourceID = -1;
+			this.res = null;
+			this.capacity = cap;
+			this.type = 0;
+		}
+		
+		public void setType(int t){
+			this.type = t;
+		}
+		
+		public int getType(){
+			return this.type;
 		}
 		
 		public void setStatus(int id){
@@ -38,12 +52,12 @@
 			return this.status;
 		}
 		
-		public void setResourceID(int id){
-			this.resourceID = id;
+		public void setResource(Resource r){
+			this.res = r;
 		}
 		
-		public int getResourceID(){
-			return this.resourceID;
+		public Resource getResource(){
+			return this.res;
 		}
 		
 		public void setCapacity(int cap){
