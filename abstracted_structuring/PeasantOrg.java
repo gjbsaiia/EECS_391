@@ -49,6 +49,7 @@ public class PeasantOrg {
 	private List<Resource> woodList;
 	private List<List<Resource>> resources;
 	
+	
 	public PeasantOrg(int playernum, StateView initialState){
 		this.player = playernum;
 		this.currentGold = initialState.getResourceAmount(this.player, ResourceType.GOLD);
@@ -143,102 +144,120 @@ public class PeasantOrg {
         return true;
 	}
 	
-	public Map<Integer, Action> assignWork(Map<Integer, Action> actions, StateView newstate){
-		
+	public Map<Integer, Action> assignWork(StateView newstate, Map<Integer, Action> turnActions){
+		Map<Integer, Action> actions = new HashMap<Integer, Action>();
 		// some ptrs so we don't have to reconfigure the lists each time
 		int gi = 0;
 		int wi = 0;
-		for( Peasant ptr : manifest){		
-			// if we don't have enough idle resources, just double up the assignments
-			// checking to see if peasant is idle
-			if(ptr.getStatus() == 0){
-				Action action = null;
-				// Gold seems to be more important than wood, prioritizing gold
-				if(goldGatherers > woodGatherers){
-					ptr.setStatus(2); //peasant is  mining wood
-					ptr.setType(2);
-					while(!(woodList.get(wi).checkCap() && woodList.get(wi).isActive()))	wi++;	
-					if(wi > woodList.size()) wi = 0;
-					action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, woodList.get(wi).id);
-					woodList.get(wi).incWork();
-					ptr.setResource(woodList.get(wi));
-					woodGatherers ++;
+		for( Peasant ptr : manifest){
+			Action action = null;
+			if(!turnActions.containsKey(ptr.id)){
+				switch(ptr.getStatus()){
+				case(0):
+					// Gold seems to be more important than wood, prioritizing gold
+					if(goldGatherers > woodGatherers){
+						ptr.setStatus(2); //peasant is  mining wood
+						ptr.setType(2);
+						while(!(woodList.get(wi).checkCap() && woodList.get(wi).isActive()))	wi++;	
+						if(wi > woodList.size()) wi = 0;
+						action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, woodList.get(wi).id);
+						woodList.get(wi).incWork();
+						ptr.setResource(woodList.get(wi));
+						woodGatherers ++;
+					}
+					else{
+						ptr.setStatus(1); //peasant is  mining gold
+						ptr.setType(1);
+						while(!(goldList.get(gi).checkCap() && goldList.get(gi).isActive())) gi++;
+						if(gi > goldList.size()) gi = 0;
+						action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, goldList.get(gi).id);
+						goldList.get(gi).incWork();
+						ptr.setResource(goldList.get(gi));
+						goldGatherers ++;
+					}
+					System.out.println("Worker ID: "+ptr.id+", status: "+ptr.getStatus()+", type: "+ptr.getType()+", capacity: "+ptr.getCapacity());
+					System.out.println("     Resource ID: "+ptr.getResource().id+", Cargo type: "+newstate.getUnit(ptr.id).getCargoType()+", Amount: "+newstate.getUnit(ptr.id).getCargoAmount());
+					break;
+				case(1):
+					if(ptr.getResource() != null && ptr.getResource().isActive()){
+						if(newstate.getUnit(ptr.id).getCargoAmount() >= ptr.getCapacity()){
+							ptr.getResource().updateAmount(newstate.getUnit(ptr.id).getCargoAmount());
+							action = new TargetedAction(ptr.id, ActionType.COMPOUNDDEPOSIT, townHall.get(0));
+							ptr.setStatus(3);						
+						}
+						else{
+							action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, ptr.getResource().id);
+						}
+					}
+					else ptr.setStatus(0);
+					break;
+				case(2):
+					if(ptr.getResource() != null && ptr.getResource().isActive()){
+						if(newstate.getUnit(ptr.id).getCargoAmount() >= ptr.getCapacity()){
+							ptr.getResource().updateAmount(newstate.getUnit(ptr.id).getCargoAmount());
+							action = new TargetedAction(ptr.id, ActionType.COMPOUNDDEPOSIT, townHall.get(0));
+							ptr.setStatus(3);						
+						}
+						else{
+							action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, ptr.getResource().id);
+						}
+					}
+					else ptr.setStatus(0);
+					break;
+				case(3):
+					if(newstate.getUnit(ptr.id).getCargoAmount() < ptr.getCapacity()){
+						if(ptr.getResource() != null && ptr.getResource().isActive()){
+							action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, ptr.getResource().id);
+							ptr.setStatus(ptr.getType());
+						}
+						else{
+							if(!(ptr.getResource().isActive())){
+								System.out.println("*************************************************");
+								System.out.println("Resource "+ptr.getResource().id+" has been exhausted.");
+								System.out.println("*************************************************");
+								ptr.setResource(null);
+							}
+							if(ptr.getType() == 1) goldGatherers --;
+							else woodGatherers --;
+							ptr.setType(0);
+							ptr.setStatus(0);
+						}
+					}
+					else action = new TargetedAction(ptr.id, ActionType.COMPOUNDDEPOSIT, townHall.get(0));
+					break;
 				}
-				else{
-					ptr.setStatus(1); //peasant is  mining gold
-					ptr.setType(1);
-					while(!(goldList.get(gi).checkCap() && goldList.get(gi).isActive())) gi++;
-					if(gi > goldList.size()) gi = 0;
-					action = new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, goldList.get(gi).id);
-					goldList.get(gi).incWork();
-					ptr.setResource(goldList.get(gi));
-					goldGatherers ++;
-				}
-				System.out.println("Worker ID: "+ptr.id+", status: "+ptr.getStatus()+", type: "+ptr.getType()+", capacity: "+ptr.getCapacity());
-				System.out.println("     Resource ID: "+ptr.getResource().id+", Cargo type: "+newstate.getUnit(ptr.id).getCargoType()+", Amount: "+newstate.getUnit(ptr.id).getCargoAmount());
-				actions.put(ptr.id, action);
-			}
-			if(ptr.getStatus() == 3 && newstate.getUnit(ptr.id).getCargoAmount() == 0){
-				actions.put(ptr.id, new TargetedAction(ptr.id, ActionType.COMPOUNDGATHER, ptr.getResource().id));
-				ptr.setStatus(ptr.getType());
-			}
-			else if(newstate.getUnit(ptr.id).getCargoAmount() >= ptr.getCapacity() && ptr.getStatus() != 3){
-				System.out.println("Resource "+ptr.getResource().id+", had "+ptr.getResource().getAmount()+".");
-				ptr.getResource().updateAmount(newstate.getUnit(ptr.id).getCargoAmount());
-				System.out.println("After deposit of "+newstate.getUnit(ptr.id).getCargoAmount()+", it has "+ptr.getResource().getAmount()+".");
-				actions.put(ptr.id, new TargetedAction(ptr.id, ActionType.COMPOUNDDEPOSIT, townHall.get(0)));
-				ptr.setStatus(3);
-			}
-			else if(!(ptr.getResource().isActive())){
-				System.out.println("*************************************************");
-				System.out.println("Resource "+ptr.getResource().id+" has been exhausted.");
-				System.out.println("*************************************************");
-				ptr.setStatus(0);
-				if(ptr.getType() == 1) goldGatherers --;
-				else woodGatherers --;
+				if(action != null) actions.put(ptr.id, action);
+				//System.out.println("Worker "+ptr.id+", status: "+ptr.getStatus()+", resource: "+ptr.getResource().id+", carrying: "+newstate.getUnit(ptr.id).getCargoAmount()+".");
 			}
 		}
 		return actions;
 	}
 	
-	private Map<Integer, Action> itinerary(Map<Integer, Action> turnActions, StateView newstate){
+	private Map<Integer, Action> itinerary(StateView newstate){
+		Map<Integer, Action> turnActions = new HashMap<Integer, Action>();
         //builds peasants until have 5 peasants
-        if(manifest.size() < 5)
-        {
-            if(currentGold >= 400)
-            {
-
-                    TemplateView peasantTemplate = newstate.getTemplate(this.player, "Peasant");
-                    int peasantTemplateID = peasantTemplate.getID();
-
-                    int townhallID = townHall.get(0);
-
-                    turnActions.put(townhallID, Action.createCompoundProduction(townhallID, peasantTemplateID));
+        if(manifest.size() < 5){
+            if(currentGold >= 400){
+	            TemplateView peasantTemplate = newstate.getTemplate(this.player, "Peasant");
+	            turnActions.put(townHall.get(0), Action.createCompoundProduction(townHall.get(0), peasantTemplate.getID()));
             }
         }
 		//build a farm when you can
         if(currentGold >= 500 && currentWood >= 250 && farm.size()==0) {
         	TemplateView farmTemplate = newstate.getTemplate(this.player, "Farm");
-            int farmTemplateID = farmTemplate.getID();
-
-            turnActions.put(manifest.get(0).id, Action.createCompoundBuild(manifest.get(0).id, farmTemplateID, 5, 3));
+            turnActions.put(manifest.get(0).id, Action.createCompoundBuild(manifest.get(0).id, farmTemplate.getID(), 5, 3));
         }
         
         //build a barracks when you can
         if(currentGold >= 700 && currentWood >= 400 && farm.size()>0 && barracks.size()==0 ) {
         	TemplateView barracksTemplate = newstate.getTemplate(this.player, "Barracks");
-            int barracksTemplateID = barracksTemplate.getID();
-
-            turnActions.put(manifest.get(0).id, Action.createCompoundBuild(manifest.get(0).id, barracksTemplateID, 10, 10));
+            turnActions.put(manifest.get(0).id, Action.createCompoundBuild(manifest.get(0).id, barracksTemplate.getID(), 10, 10));
         }
         
         //build footman
         if(barracks.size() > 0 && currentGold >= 600) {
         	TemplateView footmanTemplate = newstate.getTemplate(this.player, "Footman");
-            int footmanTemplateID = footmanTemplate.getID();
-            
-            turnActions.put(barracks.get(0), Action.createCompoundProduction(barracks.get(0), footmanTemplateID));
-
+            turnActions.put(barracks.get(0), Action.createCompoundProduction(barracks.get(0), footmanTemplate.getID()));
         }
         return turnActions;
 	}
@@ -259,9 +278,9 @@ public class PeasantOrg {
             else if(unitTypeName.equals("Barracks"))
             	barracks.add(unitID);
 		}
-		turnActions = itinerary(turnActions, newstate);
+		turnActions.putAll(itinerary(newstate));
 		if(manifest.size() > 0){
-			turnActions = assignWork(turnActions, newstate);
+			turnActions.putAll(assignWork(newstate, turnActions));
 		}
 		return turnActions;
 	}
