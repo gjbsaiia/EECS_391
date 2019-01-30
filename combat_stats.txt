@@ -1,0 +1,78 @@
+Scenario 1:
+
+        Enemy (Player 0):: 
+                5 footmen
+                        -> 120 health, template 25
+                1 tower
+                        -> 150 health, template 1
+        ME (Player 1)::
+                3 footmen
+                        -> 100 health, templateID 58
+                2 archers
+                        -> 40 health, templateID 55
+                2 ballista
+                        -> 20 health, templateID 35
+
+
+Units: (TemplateIDs reference back to Combat.xml
+
+        Enemy Footman --> 600 gold
+                          120 health
+                          1 range, 8 base attack, 3 piercing attack, 2 armor
+                          25 turn attack duration
+                          16 turn move duration
+                          TemplateID 25
+                        Upgrades:
+                             +2 piercing Attack (Sword1, ID 14)
+                             +2 piercing Attack (Sword2, ID 15)
+                             +2 armor (Shield1, ID 20)
+                             +2 armor (Shield2, ID 19)
+
+        Enemy ScoutTower --> 550 Gold, 200 Wood
+                             150 health
+                             6 range, 15 base attack, 20 piercing attack, 20 armor
+                             4 turn attack duration
+                             TemplateID 1
+                           Upgrades:
+                                +4 base Attack, +12 piercing attack, 
+                                        +30 health, +6 range (GuardTower,ID 24)
+                    
+        Footman --> 600 gold
+                    60 health (base)
+                    1 range, 8 base attack, 3 piercing attack, 2 armor
+                    25 turn attack duration
+                    16 turn move duration
+                    TemplateID 58
+                Upgrades:
+                     +2 piercing Attack (Sword1, ID 47)
+                     +2 piercing Attack (Sword2, ID 48)
+                     +2 armor (Shield1, ID 53)
+                     +2 armor (Shield2, ID 53)
+                        
+        Archer --> 500 Gold, 50 Wood
+                   40 health (base)
+                   3 range, 10 base attack, 6 piercing attack, 0 armor
+                   65 turn attack duration
+                   16 turn move duration
+                   TemplateID 55
+                Upgrades:
+                   +1 piercing attack (Arrow1, ID 39)
+                   +1 piercing attack (Arrow2, ID 40)
+                   +1 range (Longbow, ID 41)
+                   +0 to anything (Paladin, ID 51)
+                   +10 health (Ranger, ID 49)
+                   +0 to anything (Scouting, ID 54)
+                   +3 piercing attack (Marksmanship, ID 56)
+                        
+        Ballista --> 900 Gold, 300 Wood
+                     10 health (base)
+                     8 range, 12 base attack, 0 piercing attack, 0 armor
+                     200 turn attack duration
+                     32 turn move duration
+                     TemplateID 35
+                Upgrades:
+                     +15 piercing attack (Ballista1, ID 65)
+                     +15 piercing attack (Ballista2, ID 61)
+
+
+
