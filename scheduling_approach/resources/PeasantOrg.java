@@ -1,3 +1,4 @@
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
@@ -227,7 +228,6 @@ public class PeasantOrg {
 					break;
 				}
 				if(action != null) actions.put(ptr.id, action);
-				//System.out.println("Worker "+ptr.id+", status: "+ptr.getStatus()+", resource: "+ptr.getResource().id+", carrying: "+newstate.getUnit(ptr.id).getCargoAmount()+".");
 			}
 		}
 		return actions;
@@ -269,13 +269,13 @@ public class PeasantOrg {
 		for(Integer unitID : allUnitIds){
 			UnitView unit = newstate.getUnit(unitID);
 			String unitTypeName = unit.getTemplateView().getName();
-            if(unitTypeName.equals("TownHall"))
+            if(unitTypeName.equals("TownHall") && !(townHall.contains(unitID)))
             	townHall.add(unitID);
             else if(unitTypeName.equals("Peasant") && !(manifest.contains(new Peasant(unitID, 0))))
             	manifest.add(new Peasant(unitID, 100));
-            else if(unitTypeName.equals("Farm"))
+            else if(unitTypeName.equals("Farm") && !(farm.contains(unitID)))
             	farm.add(unitID);
-            else if(unitTypeName.equals("Barracks"))
+            else if(unitTypeName.equals("Barracks") && !(barracks.contains(unitID)))
             	barracks.add(unitID);
 		}
 		turnActions.putAll(itinerary(newstate));

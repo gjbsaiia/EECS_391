@@ -1,8 +1,4 @@
-/*
- *  Data type for resources
- *  Stores x,y coordinate along with whether or not the resource is actively being mined
- *  
- */
+
 
 import java.lang.Math;
 
