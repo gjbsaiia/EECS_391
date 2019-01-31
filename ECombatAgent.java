@@ -33,7 +33,7 @@ public class ECombatAgent extends Agent {
                         enemyPlayerNum = new Integer(otherargs[0]);
                 }
 
-                System.out.println("Constructed MyCombatAgent");
+                System.out.println("Constructed New MyCombatAgent");
         }
 
         @Override
@@ -78,7 +78,7 @@ public class ECombatAgent extends Agent {
 
                         UnitView unit = newstate.getUnit(unitID);
                         String unitTypeName = unit.getTemplateView().getName();
-                        System.out.println(unitTypeName);
+                       // System.out.println(unitTypeName);
                         if(unitTypeName.equals("Tower"))
                         	towerIds.add(unitID);
                         else if(unitTypeName.equals("Archer"))
@@ -114,35 +114,39 @@ public class ECombatAgent extends Agent {
                         else
                             System.err.println("Unexpected Unit type: " + unitTypeName);
                 }
+                //finds closest footman to attack, also stores unitID
                 int min=1000;
                 Integer minID=0;
                 int dist;
-                
-                //Find closest footman to attack
-                //Uses 7,10 as averge location of myunits
-                for(Integer unitID : EfootmanIds)
-                {
-                	dist=newstate.getUnit(EfootmanIds.get(unitID)).getXPosition()-7+10-newstate.getUnit(EfootmanIds.get(unitID)).getYPosition();
-                	if(dist<min)
-                	{
-                		min=dist;
-                		minID=unitID;
-                	}
-                }
-               
-                for(Integer myUnitID : archerIds)
-                {
-                        // Command all of my units to attack the first enemy unit in the list
-                	  actions.put(myUnitID, Action.createCompoundAttack(myUnitID, minID));
-                                       
-                }
-                for(Integer myUnitID : ballistaIds)
-                {
-                        // Command all of my units to attack the first enemy unit in the list
-                	  actions.put(myUnitID, Action.createCompoundAttack(myUnitID, minID));
-                	 // EscoutTowerIds
-                }
-               
+                int [] distances=new int[10];
+                int iterator=0;
+              for(Integer mUnitID : myUnitIDs)
+               // Integer mUnitID= myUnitIDs.get(0);
+               {
+           	   min=1000;
+           	   minID=0;
+           	   for(Integer unitID : EfootmanIds)
+           	   {
+               	 if(mUnitID<myUnitIDs.size())
+               	 {  	 dist=getDistance(newstate, EfootmanIds.get(unitID),myUnitIDs.get(mUnitID));
+                 			 
+                		if(dist<min)
+                		{
+                			min=dist;
+                			minID=unitID;
+                		}
+               	 }
+           	   }
+               distances[iterator]=minID;
+              	iterator++;
+               }
+              iterator=0;
+              for(Integer myUnitID : myUnitIDs)
+              {
+                      // Command all of my units to attack the closest enemy
+                      actions.put(myUnitID, Action.createCompoundAttack(myUnitID, distances[iterator]));
+                      iterator++;
+              }
                 return actions;
         }
 
@@ -241,18 +245,36 @@ public class ECombatAgent extends Agent {
                              int min=1000;
                              Integer minID=0;
                              int dist;
-                             for(Integer unitID : EfootmanIds)
-                             {
-                           
-                            	 dist=newstate.getUnit(EfootmanIds.get(unitID)).getXPosition()-7+10-newstate.getUnit(EfootmanIds.get(unitID)).getYPosition();
-                             	if(dist<min)
-                             	{
-                             		min=dist;
-                             		minID=unitID;
-                               	}
-                             	
-                             }
-                   
+                             int [] distances=new int[10];
+                             int iterator=0;
+                           for(Integer mUnitID : myUnitIDs)
+                           {
+                        	   min=Integer.MAX_VALUE;
+                        	   minID=0;
+                        	   for(Integer unitID : EfootmanIds)
+                        	   {
+                            	 if(mUnitID<myUnitIDs.size())
+                            	 {  	 dist=getDistance(newstate, EfootmanIds.get(unitID),myUnitIDs.get(mUnitID));
+                              			 
+                             		if(dist<min)
+                             		{
+                             			min=dist;
+                             			minID=unitID;
+                             		}
+                            	 }
+                        	   }
+                            distances[iterator]=minID;
+                           	iterator++;
+                            }
+                           iterator=0;
+                           for(Integer myUnitID : myUnitIDs)
+                           {
+                                   // Command all of my units to attack the closest enemy
+                                   actions.put(myUnitID, Action.createCompoundAttack(myUnitID, distances[iterator]));
+                                   iterator++;
+                           }
+
+                   /*
                              for(Integer myUnitID : archerIds)
                              {
                                      // Command all of my units to attack the first enemy unit in the list
@@ -271,13 +293,24 @@ public class ECombatAgent extends Agent {
                              	  actions.put(myUnitID, Action.createCompoundAttack(myUnitID, minID));
                                  
                              }
-                            
+                            */
                         }
                 }
 
                 return actions;
         }
 
+        public int getDistance ( StateView newstate, Integer Enemy, Integer Me)
+        {
+        	
+        		int dist=(int)(Math.sqrt(Math.pow(newstate.getUnit(Enemy).getXPosition()-newstate.getUnit(Me).getXPosition(),2)
+        				+Math.pow(newstate.getUnit(Enemy).getYPosition()-newstate.getUnit(Me).getYPosition(),2)));
+        			
+        	return dist;
+        	
+        }
+        
+        
         @Override
         public void terminalStep(StateView newstate, HistoryView statehistory) {
                 System.out.println("Finished the episode");
