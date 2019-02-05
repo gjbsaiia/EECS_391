@@ -19,11 +19,15 @@ public class Astar extends Agent {
 	class MapLocation
     {
         public int x, y;
-
+        public float cost;
+       // public MapLocation cameFrom;
+        
         public MapLocation(int x, int y, MapLocation cameFrom, float cost)
         {
             this.x = x;
             this.y = y;
+            this.cost=cost;
+          //  this.cameFrom=cameFrom;
         }
     }
 
@@ -310,65 +314,99 @@ public class Astar extends Agent {
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations)
     {
-    	 Set<MapLocation> openSet = new HashSet<MapLocation>();
-    	 Set<MapLocation> closedSet = new HashSet<MapLocation>();
+       	 ArrayList<MapLocation> openSet = new ArrayList<MapLocation>();
+    	   ArrayList<MapLocation> closedSet = new ArrayList<MapLocation>();
+    	// Set<MapLocation> openSet = new HashSet<MapLocation>();
+    	// Set<MapLocation> closedSet = new HashSet<MapLocation>();
     	 Stack <MapLocation> path=new Stack<MapLocation>();
     	 int h;
-    	int[][] positions=new int [3][3];
-    	MapLocation nextMove= new MapLocation(start.x,start.y ,null, 0);
-    	int counter=0;
+     	MapLocation parent= new MapLocation(start.x,start.y ,null, 0);
+    	openSet.add(parent);
     	int cost=0;
-    	while((nextMove.x!=goal.x||nextMove.y!=goal.y)&&counter<5)
-       //find all neighbors of current state  	
+      	while(!openSet.isEmpty())
     	{
-    		//openSet.add(nextMove);    
-    		//System.out.println("next move: x,y" + nextMove.x+ " "+ nextMove.y);
-    		//This loop is designed to test all spots adjacent to the current location
+    		parent=findMove(openSet);    		
+    		//This loop is designed to find all spots adjacent to the current location
     		for(int x=-1;x<2;x++)
     		{
     			for(int y=-1;y<2;y++)
     			{
-    				MapLocation possibleMove= new MapLocation(nextMove.x+x,nextMove.y+y ,null, 0);
-    				//designed to ignore already visited spots
-    				//contains method does not work as intended
-    			
-    				if(!(x==0&&y==0)&&!closedSet.contains(possibleMove)) 
+    				MapLocation sucessor= new MapLocation(parent.x+x,parent.y+y, parent, parent.cost+1);
+    				//we return the path if we are at the goal.
+    				if(parent.x!=goal.x||parent.y!=goal.y)
     				{
-    					//checks to see if there is a resource, or if the move is off the map--
+    				
+    					//checks to see if there is a resource, or if the move is off the map
     					//the contains method returns false always, even if resource there
-    					if(checkValidMove(nextMove.x+x,nextMove.y+y,xExtent,yExtent,resourceLocations))
+    					if(checkValidMove(parent.x+x,parent.y+y,xExtent,yExtent,resourceLocations)&&!(x==0&&y==0))
     					{
-    						
-    						//calculate heuristic of each position
-    						h=heuristic(nextMove.x+x,nextMove.y+y,goal);
-    						positions[x+1][y+1]=h;
-    					//	possibleMove= new MapLocation(nextMove.x+x,nextMove.y+y ,null, cost+h);
-    						openSet.add(new MapLocation(nextMove.x+x,nextMove.y+y ,null, cost+h));
-    					}
-    					else 
-    					{
-    						h=Integer.MAX_VALUE;
-    					}    			
-    					positions[x+1][y+1]=h;
+    						h=heuristic(parent.x+x,parent.y+y,goal);
+    						//if spot is not visited with lower cost, add to open set
+    						if(!setContains(sucessor,openSet)&&!setContains(sucessor,closedSet))
+    							openSet.add(new MapLocation(parent.x+x,parent.y+y,parent, cost+h));
+    					}      			
     				}
     				else
     				{
-    					positions[x+1][y+1]=Integer.MAX_VALUE;
+       					path.push(sucessor);
+       			      	System.out.println("Done");
+       					return path;
     				}
-    			}   	
+    			}	
     		}
-    		//dispPositions(positions);
-    		//finds best move based off heuristic only, we should have to include cost
-    		nextMove=bestMove(positions,nextMove);	
-    		nextMove =new MapLocation(nextMove.x,nextMove.y ,null, cost);
-    		closedSet.add(nextMove);
     		cost++;
-    		path.push(nextMove);     
+    		openSet.remove(parent);
+    		parent.cost=cost;
+    		closedSet.add(parent);
+    		path.push(parent);     
     	}    	
+      	System.out.println("Done");
     	return path;        		
     }
     
-    
+    //checks to see if a set contains a mapLocation
+    //Used to see if a spot is already visited at a lower cost
+    private boolean setContains(MapLocation sucessor,ArrayList<MapLocation> set) {
+	
+    	int x=sucessor.x;
+    	int y=sucessor.y;
+     	for(int i=0; i<set.size();i++)
+    	{
+    		if(set.get(i).x==x&&set.get(i).y==y)
+    		{
+    			if(set.get(i).cost<sucessor.cost)
+    			return true;
+    		}
+      	}
+		return false;
+	}
+
+    //finds lowest cost move in openSet
+	public MapLocation findMove(ArrayList<MapLocation> openSet)
+    {
+    	float minCost=(float) Integer.MAX_VALUE;
+    	int minIndex=0;
+    	for(int i=0; i<openSet.size();i++)
+    	{
+    		if(openSet.get(i).cost<minCost)
+    		{
+    			minIndex=i;
+    			
+    			minCost=openSet.get(i).cost;
+    		}
+      	}
+    	  MapLocation parent=openSet.get(minIndex);
+    	  openSet.remove(minIndex);
+    	  return parent;
+    	
+    }
+	//This h functions uses the recommended heuristic, 
+	   public int heuristic(int x,int y, MapLocation goal)
+	    {
+	    	int distance=Math.max((Math.abs(x-goal.x)), (Math.abs(y-goal.y)));
+	    	return distance;	
+	    }
+	/*
     //Used for error checking to display the costs and h value of current expanded state
     public void dispPositions(int[][] positions)
     {
@@ -394,37 +432,14 @@ public class Astar extends Agent {
        	//}
     	return stack;
     }
-    
+    */
+	
     //finds best move based on the h values
     //should be modified to reflect the cost+ h values 
-   public MapLocation bestMove( int[][] positions, MapLocation start) 
-   {
-	   System.out.println("StartX "+ start.x+ " startY "+ start.y);
-	   int maxX=0;
-	   int maxY=0;
-	   int minHeuristic=Integer.MAX_VALUE;
-	   for(int x=0;x<3;x++)
-	   {
-		   for(int y=0;y<3; y++)
-		   {
-			   if(positions[x][y]<minHeuristic)
-			   {
-				   maxX=x-1;
-				   maxY=y-1;
-				   minHeuristic=positions[x][y];			   
-			   }
-		   }
-	   }
-	   MapLocation move = new MapLocation(start.x+maxX, start.y+maxY, null, 0);
-	   return move;	   
-   }
-
-   //This h functions uses the recommended heuristic, 
-   public int heuristic(int x,int y, MapLocation goal)
-    {
-    	int distance=Math.max((Math.abs(x-goal.x)), (Math.abs(y-goal.y)));
-    	return distance;	
-    }
+	
+  
+	
+   
    
    public boolean checkValidMove(int startX,int startY,int xExtent, int yExtent, Set<MapLocation> resourceLocations)
    {	  
@@ -438,12 +453,12 @@ public class Astar extends Agent {
 	   	{
 		   valid=false;
 	   	}
+	   //this isn't working right
 	  else if (resourceLocations.contains(move)) 
 		  valid=false;	 
 	   return valid;		   
    }
      
-    
     /**
      * Primitive actions take a direction (e.g. Direction.NORTH, Direction.NORTHEAST, etc)
      * This converts the difference between the current position and the
